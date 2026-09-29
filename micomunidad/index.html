@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiComunidad</title>
+<meta name="description" content="Avisos, ventas y vida de tu comunidad.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E&#x1F91D;%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+/* ================= MiComunidad · estilos ================= */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#FFFCF9;color:#221B16;
+  font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+img{max-width:100%}
+a{color:#C2410C}
+[hidden]{display:none !important}
+
+.app{max-width:640px;margin:0 auto;min-height:100vh}
+.conten{padding:14px 14px 92px}
+
+/* --- barra superior --- */
+.topbar{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #EDE6DF}
+.topbar-in{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:9px;padding:10px 14px}
+.logo{display:flex;align-items:center;gap:6px;font-weight:700;font-size:16px;white-space:nowrap}
+.logo-emo{font-size:19px;line-height:1}
+.logo-txt{letter-spacing:0}
+.sel-pueblo{flex:1;min-width:0;max-width:170px;border:1px solid #EDE6DF;background:#fff;border-radius:10px;padding:7px 8px;font-size:13.5px}
+.chip-sesion{margin-left:auto;background:#FFF1E7;color:#C2410C;border-radius:999px;font-size:12.5px;padding:5px 10px;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:400px){.logo-txt{display:none}}
+
+/* --- navegación inferior --- */
+.nav{position:fixed;bottom:0;left:0;right:0;margin:0 auto;max-width:640px;background:#fff;border-top:1px solid #EDE6DF;display:flex;z-index:50}
+.nav-btn{flex:1;background:none;border:0;padding:9px 2px 10px;text-align:center;color:#7C7169;position:relative;cursor:pointer;font-size:12.5px}
+.nav-ico{display:block;font-size:19px;line-height:1.25}
+.nav-txt{display:block}
+.nav-btn.act{color:#C2410C;font-weight:700}
+.nav-btn.act::before{content:"";position:absolute;top:0;left:16%;right:16%;height:2px;background:#C2410C;border-radius:0 0 3px 3px}
+.nav-btn:hover{color:#221B16}
+.nav-btn.act:hover{color:#9A3412}
+
+/* --- tarjetas y listas --- */
+.vista{animation:aparecer 120ms ease}
+@keyframes aparecer{from{opacity:0}to{opacity:1}}
+.card{background:#fff;border:1px solid #EDE6DF;border-radius:14px;box-shadow:0 1px 3px rgba(34,27,22,.06),0 10px 24px rgba(34,27,22,.05);padding:14px;margin-bottom:12px}
+.item{background:#fff;border:1px solid #EDE6DF;border-radius:14px;box-shadow:0 1px 3px rgba(34,27,22,.06),0 10px 24px rgba(34,27,22,.05);padding:13px;margin-bottom:10px}
+.item-tit{display:block;font-weight:700;font-size:15.5px;line-height:1.35}
+.item-meta{display:block;font-size:13px;color:#7C7169;margin-top:3px}
+.lista{display:flex;flex-direction:column;gap:10px}
+.sec-tit{font-size:17px;font-weight:700;margin:4px 0 10px}
+.admin-tit{font-size:15.5px;font-weight:700;margin:18px 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.carga{color:#7C7169;font-size:14px;padding:18px 0;text-align:center}
+.vacio{text-align:center;padding:30px 12px;color:#7C7169}
+.vacio-emo{font-size:32px;line-height:1.2}
+.vacio-txt{font-size:14px;margin-top:6px}
+
+/* --- fila de lista --- */
+.fila{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:#fff;border:1px solid #EDE6DF;border-radius:14px;box-shadow:0 1px 3px rgba(34,27,22,.06),0 10px 24px rgba(34,27,22,.05);padding:12px;cursor:pointer;transition:background 120ms ease}
+.fila:hover{background:#FDFAF7}
+.thumb{width:60px;height:60px;border-radius:12px;overflow:hidden;flex:0 0 60px;background:#F5EFE9;display:flex;align-items:center;justify-content:center;font-size:28px;line-height:1}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.fila-main{flex:1;min-width:0}
+.fila-tit{display:block;font-size:16px;font-weight:700;line-height:1.3;margin:0 0 3px}
+.fila-desc{display:block;font-size:13.5px;color:#7C7169;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fila-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.precio{font-size:15px;font-weight:700;color:#C2410C}
+
+/* --- chips --- */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.chip{border:1px solid #EDE6DF;background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;color:#221B16;transition:background 120ms ease}
+.chip:hover{background:#FAF6F2}
+.chip.act{background:#C2410C;border-color:#C2410C;color:#fff;font-weight:600}
+.chip.act:hover{background:#9A3412}
+
+/* --- insignias --- */
+.badge{display:inline-block;border-radius:999px;font-size:11.5px;padding:3px 9px;background:#F3EEE9;color:#7C7169;white-space:nowrap;line-height:1.5}
+.b-acento{background:#FFF1E7;color:#C2410C}
+.b-verde{background:#E7F5EC;color:#15803D}
+.b-amarillo{background:#FEF3E2;color:#B45309}
+.b-dorado{background:#FEF3E2;color:#B45309}
+.b-rojo{background:#FDECEC;color:#B91C1C}
+.b-gris{background:#F3EEE9;color:#7C7169}
+.crono{display:inline-block;border-radius:999px;font-size:11.5px;padding:3px 9px;background:#F3EEE9;color:#7C7169;white-space:nowrap}
+.crono rojo{color:#B91C1C}
+.crono.rojo{background:#FDECEC;color:#B91C1C;font-weight:700}
+
+/* --- botones --- */
+.btn{display:block;width:100%;border-radius:12px;padding:13px 16px;font-size:15px;font-weight:700;border:1px solid transparent;cursor:pointer;text-align:center;text-decoration:none;transition:background 120ms ease,opacity 120ms ease}
+.btn-p{background:#C2410C;color:#fff}
+.btn-p:hover{background:#9A3412}
+.btn-s{background:#fff;color:#221B16;border:1px solid #EDE6DF}
+.btn-s:hover{background:#FAF6F2}
+.btn-sm{width:auto;display:inline-block;font-size:13px;font-weight:600;padding:8px 13px;border-radius:10px}
+.btn-verde{background:#15803D;color:#fff;border-color:#15803D}
+.btn-verde:hover{background:#146C33}
+.btn-rojo{background:#fff;color:#B91C1C;border:1px solid #F0C7C7}
+.btn-rojo:hover{background:#FDECEC}
+.btn[disabled]{opacity:.6;cursor:default}
+.card .btn{margin-top:10px}
+.card .btn:first-child{margin-top:0}
+
+/* --- formularios --- */
+.label{display:block;font-size:13.5px;font-weight:600;margin:13px 0 5px;color:#221B16}
+.input,.textarea{width:100%;border:1px solid #EDE6DF;background:#fff;border-radius:12px;padding:12px 13px;font-size:15px;color:#221B16}
+.input:focus,.textarea:focus,.sel-pueblo:focus{outline:none;border-color:#C2410C;box-shadow:0 0 0 3px #FFF1E7}
+.textarea{min-height:96px;resize:vertical;line-height:1.5}
+.check-row{display:flex;gap:9px;align-items:flex-start;font-size:14px;margin-top:13px;cursor:pointer}
+.check-row input{margin:2px 0 0;width:18px;height:18px;accent-color:#C2410C;flex:0 0 auto}
+.ayuda{font-size:13px;color:#7C7169;margin:6px 0 0}
+.pestanas{display:flex;gap:8px;margin:4px 0 12px}
+.pestana{flex:1;background:#fff;border:1px solid #EDE6DF;border-radius:12px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;color:#7C7169}
+.pestana.act{background:#C2410C;border-color:#C2410C;color:#fff}
+
+/* --- fotos --- */
+.prog{margin-top:10px}
+.prog-bar{height:8px;background:#F3EEE9;border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;width:0;background:#C2410C;transition:width 160ms ease}
+.prog-txt{font-size:12.5px;color:#7C7169;margin-top:5px}
+.fotos-mini{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.foto-mini{position:relative;width:74px;height:74px;border-radius:12px;overflow:hidden;border:1px solid #EDE6DF;background:#F5EFE9}
+.foto-mini img{width:100%;height:100%;object-fit:cover;display:block}
+.foto-x{position:absolute;top:3px;right:3px;width:21px;height:21px;border-radius:99px;background:rgba(34,27,22,.75);color:#fff;border:0;font-size:11px;line-height:1;cursor:pointer}
+.foto-kb{position:absolute;left:0;right:0;bottom:0;font-size:10px;background:rgba(34,27,22,.62);color:#fff;text-align:center;padding:1px 0}
+
+/* --- tarjetas de entrada (publicar) --- */
+.entrada{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:#fff;border:1px solid #EDE6DF;border-radius:14px;box-shadow:0 1px 3px rgba(34,27,22,.06),0 10px 24px rgba(34,27,22,.05);padding:15px 14px;cursor:pointer;margin-bottom:11px}
+.entrada:hover{background:#FDFAF7}
+.entrada-emo{font-size:26px;line-height:1.2}
+.entrada-main{flex:1;min-width:0}
+.entrada-tit{display:block;font-size:16px;font-weight:700}
+.entrada-sub{display:block;font-size:13px;color:#7C7169;margin-top:2px}
+
+/* --- notas --- */
+.nota-amarilla{background:#FEF3E2;color:#B45309;border:1px solid #F6E0C4;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-top:10px}
+.nota-verde{background:#E7F5EC;color:#15803D;border:1px solid #CDE8D7;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-top:10px}
+.nota-roja{background:#FDECEC;color:#B91C1C;border:1px solid #F0C7C7;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-top:10px}
+.acciones{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+
+/* --- confirmación --- */
+.conf{text-align:center}
+.conf-emo{font-size:40px;line-height:1.2}
+.conf-msg{font-size:16px;font-weight:700;margin-top:8px}
+.conf-estado{margin-top:10px}
+.conf-crono{background:#FAF7F4;border:1px solid #EDE6DF;border-radius:12px;padding:10px 12px;font-size:14px;margin-top:12px;color:#7C7169}
+
+/* --- patrocinadores --- */
+.patro-tit{font-size:15px;font-weight:700;margin:0 0 4px}
+.patro-row{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed #EDE6DF}
+.patro-row:last-child{border-bottom:0;padding-bottom:0}
+.patro-emo{font-size:22px;line-height:1.2}
+.patro-main{flex:1;min-width:0}
+.patro-nom{display:block;font-weight:700;font-size:14px}
+.patro-sub{display:block;font-size:12.5px;color:#7C7169}
+.patro-tag{font-size:11.5px;background:#FFF1E7;color:#C2410C;border-radius:999px;padding:3px 9px;white-space:nowrap}
+
+/* --- perfil --- */
+.perfil-fila{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:8px 0;border-bottom:1px dashed #EDE6DF}
+.perfil-fila:last-child{border-bottom:0;padding-bottom:0}
+.perfil-k{color:#7C7169}
+.perfil-v{font-weight:600;text-align:right}
+
+/* --- modal --- */
+.modal-wrap{position:fixed;inset:0;background:rgba(34,27,22,.48);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-cara{background:#fff;border:1px solid #EDE6DF;border-radius:16px;box-shadow:0 10px 40px rgba(34,27,22,.25);max-width:560px;width:100%;max-height:88vh;overflow:auto;position:relative;padding:16px}
+.modal-x{position:sticky;top:0;margin-left:auto;display:block;width:32px;height:32px;border-radius:99px;background:#F3EEE9;border:0;font-size:14px;cursor:pointer;color:#221B16}
+.d-hero{width:100%;height:170px;border-radius:12px;background:#F5EFE9;display:flex;align-items:center;justify-content:center;font-size:56px;line-height:1}
+.d-hero-img{width:100%;height:180px;object-fit:cover;border-radius:12px;display:block}
+.d-tit{font-size:21px;font-weight:700;line-height:1.3;margin:12px 0 4px}
+.d-precio{font-size:17px;font-weight:700;color:#C2410C}
+.d-texto{font-size:15px;line-height:1.6;margin:10px 0 0;color:#221B16}
+.d-foto{width:100%;border-radius:12px;display:block;margin-top:10px}
+.seller{display:flex;gap:11px;align-items:center;background:#FAF7F4;border:1px solid #EDE6DF;border-radius:12px;padding:11px 12px;margin-top:14px}
+.seller-emo{font-size:26px;line-height:1.2}
+.seller-main{flex:1;min-width:0}
+.seller-nom{font-weight:700;font-size:14.5px}
+.seller-sub{font-size:12.5px;color:#7C7169}
+
+/* --- toast --- */
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:#221B16;color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity 160ms ease;z-index:95;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+
+/* --- pantalla de configuración --- */
+.setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#FFFCF9}
+.setup-card{max-width:540px;width:100%;background:#fff;border:1px solid #EDE6DF;border-radius:14px;box-shadow:0 1px 3px rgba(34,27,22,.06),0 10px 24px rgba(34,27,22,.05);padding:22px 20px}
+.setup-emo{font-size:34px;text-align:center;line-height:1.2}
+.setup-tit{font-size:20px;font-weight:700;margin:8px 0 4px;text-align:center}
+.setup-sub{font-size:14px;color:#7C7169;text-align:center;margin:0 0 14px}
+.pasos{list-style:none;margin:0;padding:0}
+.paso{display:flex;gap:11px;padding:11px 0;border-bottom:1px dashed #EDE6DF}
+.paso:last-child{border-bottom:0}
+.paso-n{flex:0 0 26px;height:26px;border-radius:99px;background:#FFF1E7;color:#C2410C;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+.paso-t{font-weight:700;font-size:15px}
+.paso-d{font-size:13.5px;color:#7C7169}
+.cod{background:#F3EEE9;border-radius:6px;padding:1px 5px;font-size:12.5px}
+.setup-pie{font-size:13.5px;color:#7C7169;text-align:center;margin:14px 0 0}
+</style>
+</head>
+<body>
+
+<!-- ===================== PANTALLA SIN CONFIGURAR ===================== -->
+<div id="setup" class="setup" hidden>
+  <div class="setup-card">
+    <div class="setup-emo">🤝</div>
+    <h1 class="setup-tit">Falta conectar MiComunidad</h1>
+    <p class="setup-sub">Sigue estos 4 pasos (toma 5 minutos):</p>
+    <ol class="pasos">
+      <li class="paso">
+        <span class="paso-n">1</span>
+        <div><div class="paso-t">Crea tu proyecto</div>
+        <div class="paso-d">Entra a supabase.com y crea un proyecto gratis.</div></div>
+      </li>
+      <li class="paso">
+        <span class="paso-n">2</span>
+        <div><div class="paso-t">Pega la base de datos</div>
+        <div class="paso-d">SQL Editor → New query → pega el archivo <span class="cod">supabase/schema.sql</span> → Run.</div></div>
+      </li>
+      <li class="paso">
+        <span class="paso-n">3</span>
+        <div><div class="paso-t">Activa el acceso anónimo</div>
+        <div class="paso-d">Authentication → Sign In / Providers → activa <span class="cod">Anonymous sign-ins</span>.</div></div>
+      </li>
+      <li class="paso">
+        <span class="paso-n">4</span>
+        <div><div class="paso-t">Pega tus llaves</div>
+        <div class="paso-d">Supabase → Project Settings → API → copia el Project URL y la llave anon en <span class="cod">micomunidad/config.js</span>.</div></div>
+      </li>
+    </ol>
+    <p id="setup-nota" class="setup-pie" hidden></p>
+    <p class="setup-pie">Cuando termines, vuelve a cargar esta página.</p>
+    <button type="button" class="btn btn-p" onclick="recargar()">🔄 Ya lo hice, recargar</button>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="app" hidden>
+
+  <header class="topbar">
+    <div class="topbar-in">
+      <div class="logo"><span class="logo-emo">🤝</span><span class="logo-txt">MiComunidad</span></div>
+      <select id="sel-pueblo" class="sel-pueblo" aria-label="Elegir comunidad"></select>
+      <span id="chip-sesion" class="chip-sesion">⚪ Invitado</span>
+    </div>
+  </header>
+
+  <main class="conten">
+
+    <!-- ============ INICIO ============ -->
+    <section id="v-inicio" class="vista" hidden>
+      <input id="buscador" class="input" type="search" placeholder="🔍 Buscar productos o servicios…" aria-label="Buscar">
+      <div id="chips-cat" class="chips"></div>
+      <div id="patro-wrap" class="card" hidden></div>
+      <h2 class="sec-tit">🛒 Lo último</h2>
+      <div id="feed" class="lista"><div class="carga">Cargando…</div></div>
+    </section>
+
+    <!-- ============ AVISOS ============ -->
+    <section id="v-avisos" class="vista" hidden>
+      <h2 class="sec-tit">📢 Avisos de la comunidad</h2>
+      <div id="lista-avisos" class="lista"><div class="carga">Cargando…</div></div>
+    </section>
+
+    <!-- ============ PUBLICAR ============ -->
+    <section id="v-publicar" class="vista" hidden>
+
+      <div id="pub-entradas">
+        <h2 class="sec-tit">¿Qué quieres publicar?</h2>
+        <button type="button" class="entrada" onclick="abrirAviso()">
+          <span class="entrada-emo">📢</span>
+          <span class="entrada-main">
+            <span class="entrada-tit">Aviso sin cuenta</span>
+            <span class="entrada-sub">Eventos, emergencias y avisos del pueblo.</span>
+          </span>
+        </button>
+        <button type="button" class="entrada" onclick="abrirVender('vendedor')">
+          <span class="entrada-emo">🛒</span>
+          <span class="entrada-main">
+            <span class="entrada-tit">Vender</span>
+            <span class="entrada-sub">Publica tus productos con tu perfil.</span>
+          </span>
+        </button>
+        <button type="button" class="entrada" onclick="abrirVender('auspiciador')">
+          <span class="entrada-emo">🏛️</span>
+          <span class="entrada-main">
+            <span class="entrada-tit">Institución</span>
+            <span class="entrada-sub">Gobierno, iglesia, escuela o clínica.</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- ---- formulario de aviso ---- -->
+      <form id="form-aviso" hidden>
+        <div class="card">
+          <h2 class="sec-tit">📢 Publicar un aviso</h2>
+          <p class="ayuda">No necesitas cuenta. Solo tu nombre y celular.</p>
+
+          <label class="label" for="aviso-nombre">Quién publica (tu nombre)</label>
+          <input id="aviso-nombre" class="input" type="text" maxlength="60" placeholder="Ej. María López" autocomplete="name">
+
+          <label class="label" for="aviso-celular">Celular (10 dígitos)</label>
+          <input id="aviso-celular" class="input" type="tel" inputmode="numeric" maxlength="10" placeholder="3312345678" autocomplete="tel">
+
+          <label class="label" for="aviso-tipo">Tipo de aviso</label>
+          <select id="aviso-tipo" class="input">
+            <option value="Aviso">📢 Aviso</option>
+            <option value="Emergencia">🚨 Emergencia</option>
+            <option value="Evento">🎉 Evento</option>
+            <option value="Seguridad">🛡️ Seguridad</option>
+            <option value="Perdido">🔍 Perdido</option>
+            <option value="Salud">💊 Salud</option>
+          </select>
+
+          <label class="label" for="aviso-titulo">Título</label>
+          <input id="aviso-titulo" class="input" type="text" maxlength="90" placeholder="Ej. Fiesta el sábado en la plaza">
+
+          <label class="label" for="aviso-desc">Descripción</label>
+          <textarea id="aviso-desc" class="textarea" maxlength="800" placeholder="Cuenta los detalles importantes…"></textarea>
+
+          <label class="label">¿Cuántos días se ve?</label>
+          <div id="dias-chips" class="chips">
+            <button type="button" class="chip act" data-d="1" onclick="elegirDias(1)">⚡ 1 día</button>
+            <button type="button" class="chip" data-d="5" onclick="elegirDias(5)">📅 5 días</button>
+            <button type="button" class="chip" data-d="14" onclick="elegirDias(14)">🗓 2 semanas</button>
+            <button type="button" class="chip" data-d="30" onclick="elegirDias(30)">📆 1 mes</button>
+            <button type="button" class="chip" data-d="0" onclick="elegirDias(0)">✏️ Otro</button>
+          </div>
+          <input id="aviso-dias-otro" class="input" type="number" min="1" max="120" placeholder="Días (de 1 a 120)" hidden>
+
+          <label class="label" for="fotos-aviso">Fotos (1 a 4)</label>
+          <input id="fotos-aviso" class="input" type="file" accept="image/*" multiple>
+          <div id="prog-aviso" class="prog" hidden>
+            <div class="prog-bar"><div id="prog-fill-aviso" class="prog-fill"></div></div>
+            <div id="prog-txt-aviso" class="prog-txt">Comprimiendo…</div>
+          </div>
+          <div id="mini-aviso" class="fotos-mini"></div>
+
+          <label class="check-row"><input type="checkbox" id="aviso-dest"><span>⭐ Destacarlo (lo ve más gente)</span></label>
+          <label class="check-row"><input type="checkbox" id="aviso-novende"><span>NO es para vender (es un aviso, no un anuncio de productos)</span></label>
+
+          <button type="submit" class="btn btn-p" id="btn-aviso">📤 Enviar aviso</button>
+          <button type="button" class="btn btn-s" onclick="volverEntradas()">← Volver</button>
+        </div>
+      </form>
+
+      <!-- ---- panel de vendedor ---- -->
+      <div id="panel-vender" hidden>
+        <div class="card">
+          <h2 class="sec-tit" id="vender-tit">🛒 Venta en la comunidad</h2>
+          <p class="ayuda">Regístrate una sola vez con tu celular y tu PIN de 6 dígitos.</p>
+        </div>
+
+        <div id="vender-sin-perfil" hidden>
+          <div class="pestanas">
+            <button type="button" id="tab-registro" class="pestana act" onclick="pestanaVender('registro')">Registro</button>
+            <button type="button" id="tab-entrar" class="pestana" onclick="pestanaVender('entrar')">Entrar</button>
+          </div>
+
+          <form id="form-registro" class="card">
+            <label class="label" for="reg-nombre">Tu nombre completo</label>
+            <input id="reg-nombre" class="input" type="text" maxlength="60" autocomplete="name">
+
+            <label class="label" for="reg-celular">Celular (10 dígitos)</label>
+            <input id="reg-celular" class="input" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel">
+
+            <label class="label" for="reg-pin">PIN de 6 dígitos</label>
+            <input id="reg-pin" class="input" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Ej. 123456">
+            <p class="ayuda">El PIN es tu contraseña. Anótalo en un lugar seguro.</p>
+
+            <label class="label" for="reg-negocio">Nombre de tu negocio (opcional)</label>
+            <input id="reg-negocio" class="input" type="text" maxlength="60">
+
+            <label class="label" for="reg-pueblo">Comunidad</label>
+            <select id="reg-pueblo" class="input"></select>
+
+            <button type="submit" class="btn btn-p" id="btn-registro">Crear mi perfil</button>
+            <button type="button" class="btn btn-s" onclick="volverEntradas()">← Volver</button>
+          </form>
+
+          <form id="form-entrar" class="card" hidden>
+            <label class="label" for="ent-celular">Celular</label>
+            <input id="ent-celular" class="input" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel">
+
+            <label class="label" for="ent-pin">PIN</label>
+            <input id="ent-pin" class="input" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password">
+
+            <button type="submit" class="btn btn-p" id="btn-entrar">Entrar</button>
+            <button type="button" class="btn btn-s" onclick="volverEntradas()">← Volver</button>
+          </form>
+        </div>
+
+        <div id="vender-estado" hidden>
+          <div class="card">
+            <div id="vender-estado-txt" class="nota-amarilla"></div>
+            <button type="button" class="btn btn-s" onclick="revisarEstadoPerfil()">🔄 Revisar estado</button>
+            <button type="button" class="btn btn-s" onclick="volverEntradas()">← Volver</button>
+          </div>
+        </div>
+
+        <div id="vender-venta" hidden>
+          <form id="form-venta" class="card">
+            <h2 class="sec-tit">🛒 Nueva publicación</h2>
+            <label class="label" for="ven-titulo">Título</label>
+            <input id="ven-titulo" class="input" type="text" maxlength="90" placeholder="Ej. Hamburguesas caseras">
+
+            <label class="label" for="ven-precio">Precio</label>
+            <input id="ven-precio" class="input" type="text" maxlength="30" placeholder="Ej. $80 o Se aparta">
+
+            <label class="label" for="ven-cat">Categoría</label>
+            <select id="ven-cat" class="input">
+              <option value="🍔 Comida">🍔 Comida</option>
+              <option value="🛠️ Servicios">🛠️ Servicios</option>
+              <option value="📦 Productos">📦 Productos</option>
+              <option value="💼 Empleo">💼 Empleo</option>
+              <option value="🐄 Ganado">🐄 Ganado</option>
+              <option value="🎓 Clases">🎓 Clases</option>
+            </select>
+
+            <label class="label" for="ven-desc">Descripción</label>
+            <textarea id="ven-desc" class="textarea" maxlength="800" placeholder="Cuéntale a la gente qué vendes…"></textarea>
+
+            <label class="label" for="fotos-venta">Fotos (1 a 4)</label>
+            <input id="fotos-venta" class="input" type="file" accept="image/*" multiple>
+            <div id="prog-venta" class="prog" hidden>
+              <div class="prog-bar"><div id="prog-fill-venta" class="prog-fill"></div></div>
+              <div id="prog-txt-venta" class="prog-txt">Comprimiendo…</div>
+            </div>
+            <div id="mini-venta" class="fotos-mini"></div>
+
+            <button type="submit" class="btn btn-p" id="btn-venta">Publicar (pasa por moderación)</button>
+            <button type="button" class="btn btn-s" onclick="volverEntradas()">← Volver</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ---- confirmación de aviso ---- -->
+      <div id="conf-aviso" hidden>
+        <div class="card conf">
+          <div id="conf-emo" class="conf-emo">⏳</div>
+          <div id="conf-msg" class="conf-msg"></div>
+          <div id="conf-estado" class="conf-estado"></div>
+          <div id="conf-crono" class="conf-crono">⏱ Llevas esperando 0 minutos</div>
+          <button type="button" class="btn btn-p" onclick="actualizarEstadoAviso()">🔄 Actualizar estado</button>
+          <button type="button" class="btn btn-s" onclick="otroAviso()">📢 Publicar otro aviso</button>
+          <button type="button" class="btn btn-s" onclick="irA('avisos')">👀 Ver avisos</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ PERFIL ============ -->
+    <section id="v-perfil" class="vista" hidden>
+      <h2 class="sec-tit">👤 Tu perfil</h2>
+      <div class="card">
+        <div id="perfil-datos"><div class="carga">Cargando…</div></div>
+      </div>
+      <div class="card">
+        <button type="button" class="btn btn-p" onclick="irA('publicar')">➕ Publicar</button>
+        <button type="button" class="btn btn-s" id="btn-mis-pubs" onclick="verMisPubs()" hidden>📦 Mis publicaciones</button>
+        <button type="button" class="btn btn-s" onclick="salir()">🚪 Salir</button>
+        <button type="button" class="btn btn-s" onclick="abrirAdmin()">🛡️ Área de administración</button>
+      </div>
+      <div id="mis-pubs" hidden>
+        <h2 class="sec-tit">📦 Mis publicaciones</h2>
+        <div id="mis-pubs-lista" class="lista"><div class="carga">Cargando…</div></div>
+      </div>
+    </section>
+
+    <!-- ============ ADMIN ============ -->
+    <section id="v-admin" class="vista" hidden>
+      <div id="admin-login" class="card">
+        <h2 class="sec-tit">🛡️ Área de administración</h2>
+        <label class="label" for="admin-email">Correo</label>
+        <input id="admin-email" class="input" type="email" autocomplete="username" placeholder="tu@correo.com">
+        <label class="label" for="admin-pass">Contraseña</label>
+        <input id="admin-pass" class="input" type="password" autocomplete="current-password">
+        <div id="admin-msg" class="nota-amarilla" hidden></div>
+        <button type="button" class="btn btn-p" id="btn-admin" onclick="entrarAdmin()">Entrar</button>
+        <button type="button" class="btn btn-s" onclick="volverPerfil()">← Volver</button>
+      </div>
+
+      <div id="admin-panel" hidden>
+        <button type="button" class="btn btn-s" onclick="volverPerfil()">← Volver al perfil</button>
+
+        <h2 class="admin-tit">📞 Avisos por verificar <span id="ad-avisos-num" class="badge b-gris">0</span></h2>
+        <div id="ad-avisos" class="lista"><div class="carga">Cargando…</div></div>
+
+        <h2 class="admin-tit">⏳ Publicaciones <span id="ad-pubs-num" class="badge b-gris">0</span></h2>
+        <div id="ad-pubs" class="lista"><div class="carga">Cargando…</div></div>
+
+        <h2 class="admin-tit">🧑‍💼 Vendedores <span id="ad-perfiles-num" class="badge b-gris">0</span></h2>
+        <div id="ad-perfiles" class="lista"><div class="carga">Cargando…</div></div>
+
+        <h2 class="admin-tit">🤝 Patrocinadores</h2>
+        <div id="ad-patros" class="lista"><div class="carga">Cargando…</div></div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="nav">
+    <button type="button" class="nav-btn act" data-v="inicio" onclick="irA('inicio')"><span class="nav-ico">🏠</span><span class="nav-txt">Inicio</span></button>
+    <button type="button" class="nav-btn" data-v="avisos" onclick="irA('avisos')"><span class="nav-ico">📢</span><span class="nav-txt">Avisos</span></button>
+    <button type="button" class="nav-btn" data-v="publicar" onclick="irA('publicar')"><span class="nav-ico">➕</span><span class="nav-txt">Publicar</span></button>
+    <button type="button" class="nav-btn" data-v="perfil" onclick="irA('perfil')"><span class="nav-ico">👤</span><span class="nav-txt">Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ===================== MODAL Y TOAST ===================== -->
+<div id="modal" class="modal-wrap" hidden>
+  <div class="modal-cara">
+    <button type="button" class="modal-x" onclick="cerrarModal()">✕</button>
+    <div id="modal-cuerpo"></div>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* ==========================================================================
+   MiComunidad · aplicación (Supabase real)
+   ========================================================================== */
+
+/* ---------- catálogos ---------- */
+const CATEGORIAS = ['✨ Todo','🍔 Comida','🛠️ Servicios','📦 Productos','💼 Empleo','🐄 Ganado','🎓 Clases'];
+const ICONO_TIPO = {'Emergencia':'🚨','Evento':'🎉','Seguridad':'🛡️','Perdido':'🔍','Aviso':'📢','Salud':'💊'};
+const VENTA_PALABRAS = ['vendo','se vende','precio','por pieza','por unidad','delivery','envio','envío',
+                        'articulo','artículo','promocion','promoción','combo','liquidacion','liquidación'];
+
+/* ---------- estado ---------- */
+let sb = null;
+let pueblo = 'p1';
+let listaPueblos = [];
+let perfil = null;
+let haySesion = false;
+let vistaActual = 'inicio';
+let catSel = '✨ Todo';
+let textoBusq = '';
+let fotosAviso = [];
+let fotosVenta = [];
+let duracionDias = 1;
+let rolRegistro = 'vendedor';
+let forzarEnvio = false;
+let pestanaActual = 'registro';
+let nombresOficiales = new Set();
+let confId = null;
+let confEstado = null;
+let confIni = 0;
+let confTimer = null;
+let adminOk = false;
+let tBusq = null;
+let tToast = null;
+
+/* ================= utilidades ================= */
+function $(id){ return document.getElementById(id); }
+
+function esc(v){
+  if(v===null || v===undefined) return '';
+  return String(v).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+function toast(msg){
+  const t = $('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(tToast);
+  tToast = setTimeout(function(){ t.classList.remove('on'); }, 2800);
+}
+
+function vacio(emo, txt){
+  return '<div class="vacio"><div class="vacio-emo">'+emo+'</div><div class="vacio-txt">'+esc(txt)+'</div></div>';
+}
+
+function nombrePueblo(id){
+  const p = listaPueblos.find(function(x){ return x.id===id; });
+  return p ? (p.icono+' '+p.nombre) : String(id||'');
+}
+
+function fmtEst(x){ const n = Number(x); return (isNaN(n) ? 5 : n).toFixed(1); }
+function fmtEnt(x){ const n = Number(x); return String(isNaN(n) ? 0 : Math.trunc(n)); }
+
+function tiempoCorto(iso){
+  const d = Date.now() - Date.parse(iso);
+  if(isNaN(d)) return '';
+  const m = Math.floor(d/60000);
+  if(m < 1) return 'ahorita';
+  if(m < 60) return 'hace '+m+' min';
+  const h = Math.floor(m/60);
+  if(h < 24) return 'hace '+h+' h';
+  const dd = Math.floor(h/24);
+  return 'hace '+dd+(dd===1?' día':' días');
+}
+
+function kbTxt(bytes){
+  return bytes >= 1048576 ? (bytes/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(bytes/1024))+' KB';
+}
+
+function diasRestantes(a){
+  const creada = Date.parse(a.creado);
+  if(isNaN(creada)) return a.dias || 0;
+  const usados = Math.floor((Date.now()-creida)/86400000);
+  const r = (a.dias||0) - usados;
+  return r < 0 ? 0 : r;
+}
+
+function esOficial(nombre){
+  return nombresOficiales.has(String(nombre||'').trim().toLowerCase());
+}
+
+function badgeEstado(e){
+  if(e==='revisando') return '<span class="badge b-amarillo">⏳ Ya está visible, en revisión</span>';
+  if(e==='aprobado')  return '<span class="badge b-verde">✅ Aprobado</span>';
+  if(e==='rechazado') return '<span class="badge b-rojo">❌ Rechazado</span>';
+  return '<span class="badge b-gris">🕒 En espera de verificación</span>';
+}
+
+function detectaVenta(txt){
+  const s = String(txt||'').toLowerCase();
+  for(let i=0;i<VENTA_PALABRAS.length;i++){
+    if(s.indexOf(VENTA_PALABRAS[i]) > -1) return true;
+  }
+  if(/\$\s*\d/.test(s)) return true;
+  return false;
+}
+
+/* ================= modal ================= */
+function abrirModal(html){
+  const cuerpo = $('modal-cuerpo');
+  if(!cuerpo) return;
+  cuerpo.innerHTML = html;
+  $('modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+function cerrarModal(){
+  const m = $('modal');
+  if(!m) return;
+  m.hidden = true;
+  $('modal-cuerpo').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+/* ================= arranque ================= */
+document.addEventListener('DOMContentLoaded', arrancar);
+
+function recargar(){ window.location.reload(); }
+
+function arrancar(){
+  const mc = window.MC;
+  const libreria = (typeof window.supabase !== 'undefined');
+  if(!mc || !mc.CONFIGURADO || !libreria){
+    $('setup').hidden = false;
+    if(!libreria){
+      const n = $('setup-nota');
+      n.hidden = false;
+      n.textContent = 'No se cargó la librería de Supabase. Revisa tu conexión a internet y recarga la página.';
+    }
+    return;
+  }
+  try{
+    sb = window.supabase.createClient(mc.SUPABASE_URL, mc.SUPABASE_ANON_KEY);
+  }catch(e){
+    $('setup').hidden = false;
+    const n2 = $('setup-nota');
+    n2.hidden = false;
+    n2.textContent = 'No se pudo conectar: '+(e && e.message ? e.message : 'error desconocido');
+    return;
+  }
+
+  pueblo = lsGet('mc_pueblo') || mc.PUEBLO_DEFECTO || 'p1';
+  cargarPerfilLocal();
+
+  $('app').hidden = false;
+  enlazarEventos();
+  pintarChips();
+  mostrarVista('inicio');
+  cargarPueblos();
+  restaurarSesion();
+}
+
+function cargarPerfilLocal(){
+  const raw = lsGet('mc_perfil');
+  if(!raw){ perfil = null; return; }
+  try{ perfil = JSON.parse(raw); }catch(e){ perfil = null; }
+}
+function guardarPerfil(p){
+  if(!p){ return; }
+  try{ lsSet('mc_perfil', JSON.stringify(p)); }catch(e){}
+}
+function borrarPerfilLocal(){
+  lsDel('mc_perfil');
+  perfil = null;
+}
+
+function enlazarEventos(){
+  $('buscador').addEventListener('input', function(e){
+    textoBusq = e.target.value || '';
+    clearTimeout(tBusq);
+    tBusq = setTimeout(function(){ cargarInicio(); }, 300);
+  });
+
+  $('sel-pueblo').addEventListener('change', function(e){
+    pueblo = e.target.value;
+    lsSet('mc_pueblo', pueblo);
+    cargarInicio();
+    cargarAvisos();
+    cargarPatro();
+    renderPerfil();
+  });
+
+  $('modal').addEventListener('click', function(e){ if(e.target === $('modal')) cerrarModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') cerrarModal(); });
+
+  $('form-aviso').addEventListener('submit', enviarAvisoForm);
+  $('form-registro').addEventListener('submit', registrarPerfil);
+  $('form-entrar').addEventListener('submit', entrarPerfil);
+  $('form-venta').addEventListener('submit', publicarVenta);
+  $('fotos-aviso').addEventListener('change', function(){ procesarFotos('aviso'); });
+  $('fotos-venta').addEventListener('change', function(){ procesarFotos('venta'); });
+}
+
+/* ================= vistas ================= */
+function mostrarVista(v){
+  vistaActual = v;
+  const ids = ['inicio','avisos','publicar','perfil','admin'];
+  ids.forEach(function(n){
+    const el = document.getElementById('v-'+n);
+    if(!el) return;
+    const act = (n === v);
+    el.hidden = !act;
+    if(act){ el.classList.remove('act'); void el.offsetWidth; el.classList.add('act'); }
+    else { el.classList.remove('act'); }
+  });
+
+  const navv = (v === 'admin') ? 'perfil' : v;
+  const btns = document.querySelectorAll('.nav-btn');
+  btns.forEach(function(b){ b.classList.toggle('act', b.getAttribute('data-v') === navv); });
+
+  if(v === 'perfil') renderPerfil();
+  if(v === 'admin') cargarAdmin();
+  window.scrollTo(0,0);
+}
+
+function irA(v){
+  if(v === 'publicar') volverEntradas();
+  mostrarVista(v);
+}
+
+/* ================= comunidades ================= */
+async function cargarPueblos(){
+  const r = await sb.from('pueblos').select('id,nombre,icono').eq('activo', true).order('nombre');
+  if(r.error){
+    toast('No cargaron las comunidades: '+r.error.message);
+  } else {
+    listaPueblos = r.data || [];
+    if(!listaPueblos.some(function(p){ return p.id === pueblo; })){
+      if(listaPueblos.length) pueblo = listaPueblos[0].id;
+    }
+    const sel = $('sel-pueblo');
+    sel.innerHTML = listaPueblos.map(function(p){
+      return '<option value="'+esc(p.id)+'">'+esc(p.icono)+' '+esc(p.nombre)+'</option>';
+    }).join('');
+    sel.value = pueblo;
+    $('reg-pueblo').innerHTML = listaPueblos.map(function(p){
+      return '<option value="'+esc(p.id)+'">'+esc(p.icono)+' '+esc(p.nombre)+'</option>';
+    }).join('');
+    $('reg-pueblo').value = pueblo;
+  }
+  cargarInicio();
+  cargarAvisos();
+  cargarPatro();
+}
+
+/* ================= sesión ================= */
+async function restaurarSesion(){
+  try{
+    const r = await sb.auth.getSession();
+    if(r.error){ toast('No se pudo leer la sesión: '+r.error.message); return; }
+    const ses = r.data ? r.data.session : null;
+    if(!ses){
+      haySesion = false;
+      if(lsGet('mc_perfil')) borrarPerfilLocal();
+      actualizarChip();
+      renderPerfil();
+      return;
+    }
+    haySesion = true;
+    const rr = await sb.from('perfiles').select('*').eq('id', ses.user.id).maybeSingle();
+    if(rr.error){ toast('No pude leer tu perfil: '+rr.error.message); }
+    else if(rr.data){ perfil = rr.data; guardarPerfil(perfil); }
+    else { borrarPerfilLocal(); }
+    if(perfil && perfil.rol === 'admin' && perfil.estado === 'aprobado') adminOk = true;
+    actualizarChip();
+    renderPerfil();
+    renderPanelVendedor();
+  }catch(e){
+    toast('Error de sesión: '+(e && e.message ? e.message : ''));
+  }
+}
+
+async function asegurarSesion(){
+  try{
+    const r = await sb.auth.getSession();
+    if(r.data && r.data.session){
+      haySesion = true;
+      const uid = r.data.session.user.id;
+      if(perfil && perfil.id && perfil.id !== uid) borrarPerfilLocal();
+      return true;
+    }
+    const n = await sb.auth.signInAnonymously();
+    if(n.error){ mostrarAnonError(); return false; }
+    haySesion = true;
+    borrarPerfilLocal();
+    actualizarChip();
+    return true;
+  }catch(e){
+    toast('No se pudo iniciar sesión: '+(e && e.message ? e.message : ''));
+    return false;
+  }
+}
+
+function mostrarAnonError(){
+  abrirModal(
+    '<div class="conf">'+
+      '<div class="conf-emo">🔐</div>'+
+      '<div class="conf-msg">Falta activar el acceso anónimo</div>'+
+      '<p class="d-texto">Tu proyecto Supabase todavía no deja crear sesión sin cuenta. Haz esto:</p>'+
+      '<ol class="pasos">'+
+        '<li class="paso"><span class="paso-n">1</span><div><div class="paso-t">Abre tu proyecto</div><div class="paso-d">Ve a Supabase y abre tu proyecto.</div></div></li>'+
+        '<li class="paso"><span class="paso-n">2</span><div><div class="paso-t">Activa el proveedor</div><div class="paso-d">Authentication → Sign In / Providers → activa <span class="cod">Anonymous sign-ins</span>.</div></div></li>'+
+        '<li class="paso"><span class="paso-n">3</span><div><div class="paso-t">Vuelve a intentar</div><div class="paso-d">Guarda los cambios y repite el paso.</div></div></li>'+
+      '</ol>'+
+      '<button type="button" class="btn btn-p" onclick="cerrarModal()">Entendido</button>'+
+    '</div>'
+  );
+}
+
+function actualizarChip(){
+  const el = $('chip-sesion');
+  if(!el) return;
+  if(perfil && perfil.nombre) el.textContent = '👤 '+perfil.nombre;
+  else if(haySesion) el.textContent = '🟢 Sesión activa';
+  else el.textContent = '⚪ Invitado';
+}
+
+async function salir(){
+  const r = await sb.auth.signOut();
+  if(r.error) toast('Aviso: '+r.error.message);
+  borrarPerfilLocal();
+  haySesion = false;
+  adminOk = false;
+  $('mis-pubs').hidden = true;
+  $('btn-mis-pubs').hidden = true;
+  actualizarChip();
+  renderPerfil();
+  renderPanelVendedor();
+  toast('👋 Sesión cerrada');
+}
+
+/* ================= inicio ================= */
+function pintarChips(){
+  $('chips-cat').innerHTML = CATEGORIAS.map(function(c){
+    const act = (c === catSel) ? ' act' : '';
+    return `<button type="button" class="chip${act}" onclick="elegirCat('${esc(c)}')">${esc(c)}</button>`;
+  }).join('');
+}
+
+function elegirCat(c){
+  catSel = c;
+  pintarChips();
+  cargarInicio();
+}
+
+async function cargarInicio(){
+  const feed = $('feed');
+  if(!feed) return;
+  feed.innerHTML = '<div class="carga">Cargando…</div>';
+
+  let q = sb.from('publicaciones').select('*')
+    .eq('pueblo_id', pueblo)
+    .eq('estado', 'aprobado')
+    .order('destacado', {ascending:false})
+    .order('dest_dias', {ascending:false})
+    .order('creado', {ascending:false})
+    .limit(60);
+
+  if(catSel && catSel !== '✨ Todo') q = q.eq('categoria', catSel);
+
+  const t = String(textoBusq||'').trim().replace(/[%_,()]/g,' ');
+  if(t) q = q.or('titulo.ilike.%'+t+'%,descripcion.ilike.%'+t+'%');
+
+  const r = await q;
+  if(r.error){
+    feed.innerHTML = vacio('😵','No se pudo cargar. Intenta de nuevo.');
+    toast('No cargó el feed: '+r.error.message);
+    return;
+  }
+  const arr = r.data || [];
+  if(!arr.length){
+    feed.innerHTML = textoBusq
+      ? vacio('🔍','No encontramos nada con “'+textoBusq+'”.')
+      : vacio('📭','Todavía no hay publicaciones. ¡Sé el primero!');
+    return;
+  }
+  const conDest = arr.filter(function(p){ return p.destacado && p.dest_dias > 0; });
+  const sinDest = arr.filter(function(p){ return !(p.destacado && p.dest_dias > 0); });
+  feed.innerHTML = conDest.concat(sinDest).map(filaPub).join('');
+}
+
+function filaPub(p){
+  const conFoto = (p.fotos && p.fotos.length) ? p.fotos[0] : '';
+  const thumb = conFoto
+    ? '<img src="'+esc(conFoto)+'" alt="">'
+    : esc(p.emoji||'🛒');
+
+  const badges = [];
+  if(p.destacado && p.dest_dias > 0) badges.push('<span class="badge b-dorado">⭐ Destacado</span>');
+  if(p.categoria) badges.push('<span class="badge b-acento">'+esc(p.categoria)+'</span>');
+  if(p.precio) badges.push('<span class="precio">'+esc(p.precio)+'</span>');
+  const t = tiempoCorto(p.creado);
+  if(t) badges.push('<span class="badge b-gris">'+esc(t)+'</span>');
+
+  return '<button type="button" class="fila" onclick="verPub('+p.id+')">'+
+    '<span class="thumb">'+thumb+'</span>'+
+    '<span class="fila-main">'+
+      '<span class="fila-tit">'+esc(p.titulo)+'</span>'+
+      '<span class="fila-desc">'+esc(p.descripcion)+'</span>'+
+      '<span class="fila-meta">'+badges.join('')+'</span>'+
+    '</span>'+
+  '</button>';
+}
+
+async function verPub(id){
+  abrirModal('<div class="carga">Cargando…</div>');
+  const r = await sb.from('publicaciones').select('*').eq('id', id).maybeSingle();
+  if(r.error){ toast('Error: '+r.error.message); cerrarModal(); return; }
+  if(!r.data){ cerrarModal(); toast('Esa publicación ya no está disponible.'); return; }
+
+  const p = r.data;
+  let v = null;
+  if(p.perfil_id){
+    const rv = await sb.from('perfiles')
+      .select('id,nombre,negocio,celular,estrellas,ventas,verificado,avatar,estado')
+      .eq('id', p.perfil_id).maybeSingle();
+    if(rv.error) toast('No pude cargar al vendedor: '+rv.error.message);
+    else v = rv.data;
+  }
+  abrirModal(htmlPub(p, v));
+}
+
+function htmlPub(p, v){
+  const fotos = (p.fotos && p.fotos.length) ? p.fotos : [];
+  let h = '';
+  h += fotos.length
+    ? '<img class="d-hero-img" src="'+esc(fotos[0])+'" alt="">'
+    : '<div class="d-hero">'+esc(p.emoji||'🛒')+'</div>';
+  h += '<div class="d-tit">'+esc(p.titulo)+'</div>';
+
+  const chips = [];
+  if(p.categoria) chips.push('<span class="badge b-acento">'+esc(p.categoria)+'</span>');
+  if(p.precio) chips.push('<span class="d-precio">'+esc(p.precio)+'</span>');
+  if(p.destacado && p.dest_dias > 0) chips.push('<span class="badge b-dorado">⭐ Destacado</span>');
+  if(chips.length) h += '<div class="chips">'+chips.join('')+'</div>';
+
+  if(p.descripcion) h += '<p class="d-texto">'+esc(p.descripcion)+'</p>';
+  for(let i=1;i<fotos.length;i++) h += '<img class="d-foto" src="'+esc(fotos[i])+'" alt="">';
+
+  if(v){
+    h += '<div class="seller">'+
+      '<div class="seller-emo">'+esc(v.avatar||'👤')+'</div>'+
+      '<div class="seller-main">'+
+        '<div class="seller-nom">'+esc(v.nombre)+(v.verificado?' ✅':'')+'</div>'+
+        '<div class="seller-sub">'+esc(v.negocio||'Vendedor particular')+' · ⭐ '+fmtEst(v.estrellas)+' · '+fmtEnt(v.ventas)+' ventas</div>'+
+      '</div>'+
+    '</div>';
+  } else {
+    h += '<div class="seller"><div class="seller-emo">👤</div><div class="seller-main">'+
+      '<div class="seller-nom">Vendedor</div><div class="seller-sub">Sin datos disponibles.</div></div></div>';
+  }
+
+  if(v && v.celular){
+    const txt = 'Hola, vi tu publicación "'+p.titulo+'" en MiComunidad.';
+    h += '<a class="btn btn-p" target="_blank" rel="noopener" href="https://wa.me/52'+esc(v.celular)+
+         '?text='+encodeURIComponent(txt)+'">💬 WhatsApp</a>';
+  }
+  h += '<button type="button" class="btn btn-s" onclick="reportarPub('+p.id+',\''+esc(p.pueblo_id)+'\')">🚩 Reportar</button>';
+  return h;
+}
+
+async function reportarPub(id, pid){
+  const r = await sb.from('reportes').insert({
+    pueblo_id: pid, tipo: 'publicacion', ref_id: id,
+    motivo: 'Reporte enviado desde la app', estado: 'abierto'
+  });
+  if(r.error){ toast('No se pudo enviar el reporte: '+r.error.message); return; }
+  toast('🚩 Gracias. Revisamos tu reporte en 24 horas.');
+  cerrarModal();
+}
+
+/* ================= patrocinadores ================= */
+async function cargarPatro(){
+  const wrap = $('patro-wrap');
+  if(!wrap) return;
+  const r = await sb.from('patrocinadores').select('*');
+  if(r.error){
+    toast('No cargaron los patrocinadores: '+r.error.message);
+    wrap.hidden = true;
+    return;
+  }
+  const act = (r.data || []).filter(function(p){ return p.estado !== 'VENCIDO'; });
+  const sup = act.filter(function(p){ return p.nivel === 'super'; })
+                 .sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
+  const loc = act.filter(function(p){ return p.nivel === 'local' && p.pueblo_id === pueblo; })
+                 .sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
+  const lista = sup.concat(loc);
+  if(!lista.length){ wrap.hidden = true; wrap.innerHTML = ''; return; }
+  wrap.hidden = false;
+  wrap.innerHTML = '<div class="patro-tit">🤝 Patrocinadores</div>' + lista.map(filaPatro).join('');
+}
+
+function filaPatro(p){
+  const tag = p.tag ? '<span class="patro-tag">'+esc(p.tag)+'</span>' : '';
+  const sub = [p.categoria, p.nivel === 'super' ? 'De todos los pueblos' : nombrePueblo(p.pueblo_id)]
+    .filter(Boolean).map(function(x){ return esc(x); }).join(' · ');
+  return '<div class="patro-row">'+
+    '<span class="patro-emo">'+esc(p.ic||'🏪')+'</span>'+
+    '<span class="patro-main"><span class="patro-nom">'+esc(p.nombre)+'</span>'+
+    '<span class="patro-sub">'+sub+'</span></span>'+
+    tag+
+  '</div>';
+}
+
+/* ================= avisos ================= */
+async function cargarAvisos(){
+  const c = $('lista-avisos');
+  if(!c) return;
+  c.innerHTML = '<div class="carga">Cargando…</div>';
+
+  const q1 = sb.from('avisos').select('*')
+    .eq('pueblo_id', pueblo)
+    .in('estado', ['aprobado','revisando'])
+    .order('destacado', {ascending:false})
+    .order('creado', {ascending:false})
+    .limit(60);
+
+  const q2 = sb.from('perfiles').select('nombre,verificado')
+    .eq('pueblo_id', pueblo)
+    .eq('estado', 'aprobado')
+    .eq('verificado', true);
+
+  const res = await Promise.all([q1, q2]);
+  const r1 = res[0], r2 = res[1];
+
+  if(r2.error){
+    toast('No pude verificar instituciones: '+r2.error.message);
+  } else {
+    nombresOficiales = new Set((r2.data || []).map(function(x){
+      return String(x.nombre||'').trim().toLowerCase();
+    }));
+  }
+
+  if(r1.error){
+    c.innerHTML = vacio('😵','No se pudo cargar. Intenta de nuevo.');
+    toast('No cargaron los avisos: '+r1.error.message);
+    return;
+  }
+  const arr = r1.data || [];
+  if(!arr.length){ c.innerHTML = vacio('📭','No hay avisos ahora mismo.'); return; }
+  const conDest = arr.filter(function(a){ return a.destacado; });
+  const sinDest = arr.filter(function(a){ return !a.destacado; });
+  c.innerHTML = conDest.concat(sinDest).map(filaAviso).join('');
+}
+
+function filaAviso(a){
+  const conFoto = (a.fotos && a.fotos.length) ? a.fotos[0] : '';
+  const thumb = conFoto ? '<img src="'+esc(conFoto)+'" alt="">' : esc(a.ic||'📢');
+  const rest = diasRestantes(a);
+
+  const badges = [];
+  if(esOficial(a.nombre)) badges.push('<span class="badge b-acento">🏛️ Oficial</span>');
+  if(a.estado === 'revisando') badges.push('<span class="badge b-amarillo">⏳ Verificando</span>');
+  if(a.destacado) badges.push('<span class="badge b-dorado">⭐ Destacado</span>');
+  badges.push('<span class="badge b-gris">⏳ '+(rest <= 0 ? 'Termina hoy' : rest+(rest===1?' día':' días'))+'</span>');
+
+  const t = tiempoCorto(a.creado);
+  if(t) badges.push('<span class="badge b-gris">'+esc(t)+'</span>');
+
+  return '<button type="button" class="fila" onclick="verAviso('+a.id+')">'+
+    '<span class="thumb">'+thumb+'</span>'+
+    '<span class="fila-main">'+
+      '<span class="fila-tit">'+esc(a.titulo)+'</span>'+
+      '<span class="fila-desc">'+esc(a.descripcion)+'</span>'+
+      '<span class="fila-meta">'+badges.join('')+'</span>'+
+      '<span class="fila-meta"><span class="badge b-gris">👤 '+esc(a.nombre)+'</span></span>'+
+    '</span>'+
+  '</button>';
+}
+
+async function verAviso(id){
+  abrirModal('<div class="carga">Cargando…</div>');
+  const r = await sb.from('avisos').select('*').eq('id', id).maybeSingle();
+  if(r.error){ toast('Error: '+r.error.message); cerrarModal(); return; }
+  if(!r.data){ cerrarModal(); toast('Ese aviso ya no está disponible.'); return; }
+
+  const a = r.data;
+  const fotos = (a.fotos && a.fotos.length) ? a.fotos : [];
+  const rest = diasRestantes(a);
+
+  const badges = [];
+  if(esOficial(a.nombre)) badges.push('<span class="badge b-acento">🏛️ Oficial</span>');
+  if(a.estado === 'revisando') badges.push('<span class="badge b-amarillo">⏳ Verificando</span>');
+  if(a.destacado) badges.push('<span class="badge b-dorado">⭐ Destacado</span>');
+  badges.push('<span class="badge b-acento">'+esc(a.tipo||'Aviso')+'</span>');
+  badges.push('<span class="badge b-gris">⏳ '+(rest <= 0 ? 'Termina hoy' : rest+(rest===1?' día':' días'))+'</span>');
+
+  let h = '';
+  h += fotos.length
+    ? '<img class="d-hero-img" src="'+esc(fotos[0])+'" alt="">'
+    : '<div class="d-hero">'+esc(a.ic||'📢')+'</div>';
+  h += '<div class="chips">'+badges.join('')+'</div>';
+  h += '<div class="d-tit">'+esc(a.titulo)+'</div>';
+  h += '<p class="d-texto">'+esc(a.descripcion)+'</p>';
+  for(let i=1;i<fotos.length;i++) h += '<img class="d-foto" src="'+esc(fotos[i])+'" alt="">';
+  h += '<div class="seller"><div class="seller-emo">👤</div><div class="seller-main">'+
+       '<div class="seller-nom">'+esc(a.nombre)+'</div>'+
+       '<div class="seller-sub">Publicado '+esc(tiempoCorto(a.creado)||'hace un momento')+'</div></div></div>';
+  h += '<div class="seller"><div class="seller-emo">🛒</div><div class="seller-main">'+
+       '<div class="seller-nom">¿Vender?</div>'+
+       '<div class="seller-sub">Crea tu perfil de vendedor y publica en la comunidad.</div></div></div>';
+  h += '<button type="button" class="btn btn-p" onclick="irAVender()">➕ Crear mi perfil de vendedor</button>';
+
+  abrirModal(h);
+}
+
+function irAVender(){
+  cerrarModal();
+  irA('publicar');
+  abrirVender('vendedor');
+}
+
+/* ================= publicar: entradas ================= */
+function volverEntradas(){
+  $('pub-entradas').hidden = false;
+  $('form-aviso').hidden = true;
+  $('panel-vender').hidden = true;
+  $('conf-aviso').hidden = true;
+  if(confTimer){ clearInterval(confTimer); confTimer = null; }
+}
+
+function abrirAviso(){
+  volverEntradas();
+  $('pub-entradas').hidden = true;
+  $('form-aviso').hidden = false;
+  window.scrollTo(0,0);
+}
+
+function abrirVender(rol){
+  rolRegistro = (rol === 'auspiciador') ? 'auspiciador' : 'vendedor';
+  volverEntradas();
+  $('pub-entradas').hidden = true;
+  $('panel-vender').hidden = false;
+  $('vender-tit').textContent = rolRegistro === 'auspiciador' ? '🏛️ Registro de institución' : '🛒 Venta en la comunidad';
+  renderPanelVendedor();
+  window.scrollTo(0,0);
+}
+
+function elegirDias(n){
+  duracionDias = n;
+  const btns = document.querySelectorAll('#dias-chips .chip');
+  btns.forEach(function(b){
+    b.classList.toggle('act', parseInt(b.getAttribute('data-d'),10) === n);
+  });
+  const otro = $('aviso-dias-otro');
+  otro.hidden = (n !== 0);
+  if(n === 0) otro.focus();
+}
+
+function otroAviso(){
+  const f = $('form-aviso');
+  f.reset();
+  fotosAviso = [];
+  pintarFotos('aviso');
+  forzarEnvio = false;
+  duracionDias = 1;
+  elegirDias(1);
+  abrirAviso();
+}
+
+/* ================= publicar: aviso ================= */
+function alertaVenta(){
+  abrirModal(
+    '<div class="conf">'+
+      '<div class="conf-emo">🛒</div>'+
+      '<div class="conf-msg">Parece que es una venta</div>'+
+      '<p class="d-texto">Tu texto trae palabras de venta. Si vendes, es mejor con perfil de vendedor. Si no es venta, continúa.</p>'+
+    '</div>'+
+    '<button type="button" class="btn btn-p" onclick="crearVendedor()">🛒 Crear perfil de vendedor</button>'+
+    '<button type="button" class="btn btn-s" onclick="continuarSinVenta()">No es venta, continuar</button>'
+  );
+}
+function crearVendedor(){
+  cerrarModal();
+  irA('publicar');
+  abrirVender('vendedor');
+}
+function continuarSinVenta(){
+  cerrarModal();
+  forzarEnvio = true;
+  enviarAvisoForm(null);
+}
+
+async function enviarAvisoForm(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  if(!sb) return;
+
+  const titulo = $('aviso-titulo').value.trim();
+  const desc = $('aviso-desc').value.trim();
+  const nombre = $('aviso-nombre').value.trim();
+  const celular = $('aviso-celular').value.replace(/\D/g,'');
+  const tipo = $('aviso-tipo').value;
+  const dest = $('aviso-dest').checked;
+  const novende = $('aviso-novende').checked;
+  let dias = duracionDias;
+  if(dias === 0){
+    const otro = parseInt($('aviso-dias-otro').value,10);
+    dias = isNaN(otro) ? 0 : otro;
+  }
+
+  if(nombre.length < 3){ toast('Escribe quién publica (mínimo 3 letras).'); $('aviso-nombre').focus(); return; }
+  if(!/^[0-9]{10}$/.test(celular)){ toast('El celular debe tener 10 dígitos.'); $('aviso-celular').focus(); return; }
+  if(titulo.length < 5){ toast('El título debe tener al menos 5 letras.'); $('aviso-titulo').focus(); return; }
+  if(dias < 1 || dias > 120){ toast('La duración debe ser de 1 a 120 días.'); return; }
+  if(!novende){ toast('Marca la casilla “NO es para vender”.'); return; }
+
+  if(!forzarEnvio && detectaVenta(titulo+' '+desc)){ alertaVenta(); return; }
+
+  const btn = $('btn-aviso');
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  try{
+    const r = await sb.rpc('enviar_aviso', {
+      p_pueblo_id: pueblo,
+      p_nombre: nombre,
+      p_celular: celular,
+      p_titulo: titulo,
+      p_descripcion: desc || null,
+      p_dias: dias,
+      p_ic: ICONO_TIPO[tipo] || '📢',
+      p_tipo: tipo,
+      p_destacado: dest,
+      p_fotos: fotosAviso.map(function(f){ return f.url; })
+    });
+    if(r.error){ toast('No se pudo enviar: '+r.error.message); return; }
+    const fila = (Array.isArray(r.data) && r.data.length) ? r.data[0] : null;
+    if(!fila){ toast('El servidor no respondió como esperábamos.'); return; }
+    if(!fila.ok){ toast(fila.mensaje || 'No se pudo enviar.'); return; }
+    mostrarConfirmacion(fila);
+  }catch(e){
+    toast('Error: '+(e && e.message ? e.message : 'desconocido'));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '📤 Enviar aviso';
+  }
+}
+
+function mostrarConfirmacion(f){
+  confId = f.id;
+  confEstado = f.estado;
+  confIni = Date.now();
+  forzarEnvio = false;
+  volverEntradas();
+  $('conf-aviso').hidden = false;
+  $('conf-msg').textContent = f.mensaje || 'Recibido.';
+  pintarConf();
+  if(confTimer) clearInterval(confTimer);
+  confTimer = setInterval(pintarConf, 20000);
+  window.scrollTo(0,0);
+}
+
+function pintarConf(){
+  const min = Math.floor((Date.now()-confIni)/60000);
+  const c = $('conf-crono');
+  if(c) c.textContent = '⏱ Llevas esperando '+min+(min===1?' minuto':' minutos');
+  const e = $('conf-estado');
+  if(e) e.innerHTML = badgeEstado(confEstado);
+  const em = $('conf-emo');
+  if(em) em.textContent = (confEstado === 'revisando' || confEstado === 'aprobado') ? '✅' : '⏳';
+}
+
+async function actualizarEstadoAviso(){
+  if(!confId){ toast('No hay aviso que revisar.'); return; }
+  const r = await sb.from('avisos').select('id,estado').eq('id', confId).maybeSingle();
+  if(r.error){ toast('Error: '+r.error.message); return; }
+  if(!r.data){
+    $('conf-estado').innerHTML = '<span class="badge b-gris">⏳ Sigue en espera (aún no se ve)</span>';
+    toast('⏳ Sigue esperando un momento.');
+    return;
+  }
+  confEstado = r.data.estado;
+  pintarConf();
+  toast('✅ Estado actualizado.');
+}
+
+/* ================= publicar: vendedor ================= */
+function pestanaVender(t){
+  pestanaActual = (t === 'entrar') ? 'entrar' : 'registro';
+  const reg = (pestanaActual === 'registro');
+  $('tab-registro').classList.toggle('act', reg);
+  $('tab-entrar').classList.toggle('act', !reg);
+  $('form-registro').hidden = !reg;
+  $('form-entrar').hidden = reg;
+}
+
+function renderPanelVendedor(){
+  const a = $('vender-sin-perfil'), b = $('vender-estado'), c = $('vender-venta');
+  if(!a) return;
+
+  if(!perfil){
+    a.hidden = false;
+    b.hidden = true;
+    c.hidden = true;
+    pestanaVender(pestanaActual);
+    return;
+  }
+
+  a.hidden = true;
+  b.hidden = false;
+  const t = $('vender-estado-txt');
+
+  if(perfil.rol === 'admin'){
+    t.className = 'nota-verde';
+    t.innerHTML = '🛡️ <strong>'+esc(perfil.nombre)+'</strong>, entraste como administrador.';
+    c.hidden = true;
+  } else if(perfil.estado === 'aprobado'){
+    t.className = 'nota-verde';
+    t.innerHTML = '✅ <strong>'+esc(perfil.nombre)+'</strong>, tu perfil está aprobado. Ya puedes publicar.';
+    c.hidden = false;
+  } else if(perfil.estado === 'rechazado'){
+    t.className = 'nota-roja';
+    t.innerHTML = '❌ <strong>'+esc(perfil.nombre)+'</strong>, tu perfil fue rechazado. Habla con el administrador de la comunidad.';
+    c.hidden = true;
+  } else {
+    t.className = 'nota-amarilla';
+    t.innerHTML = '⏳ <strong>'+esc(perfil.nombre)+'</strong>, tu perfil está enviado. Un administrador lo aprueba (máx. 24 h).';
+    c.hidden = true;
+  }
+}
+
+function validarCelularPin(celular, pin){
+  if(!/^[0-9]{10}$/.test(celular)){ toast('El celular debe tener 10 dígitos.'); return false; }
+  if(!/^[0-9]{6}$/.test(pin)){ toast('El PIN debe tener 6 dígitos.'); return false; }
+  return true;
+}
+
+async function usarFilaPerfil(fila, mensaje){
+  perfil = {
+    id: fila.id, nombre: fila.nombre, negocio: fila.negocio, rol: fila.rol,
+    pueblo_id: fila.pueblo_id, estado: fila.estado
+  };
+  const rr = await sb.from('perfiles').select('*').eq('id', fila.id).maybeSingle();
+  if(rr.error) toast('Aviso: no pude leer tu perfil completo: '+rr.error.message);
+  else if(rr.data) perfil = rr.data;
+  guardarPerfil(perfil);
+  toast(mensaje || fila.mensaje || 'Listo');
+  actualizarChip();
+  renderPanelVendedor();
+  renderPerfil();
+}
+
+async function registrarPerfil(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+
+  const nombre = $('reg-nombre').value.trim();
+  const celular = $('reg-celular').value.replace(/\D/g,'');
+  const pin = $('reg-pin').value.replace(/\D/g,'');
+  const negocio = $('reg-negocio').value.trim();
+  const pid = $('reg-pueblo').value || pueblo;
+
+  if(nombre.length < 3){ toast('Escribe tu nombre completo (mínimo 3 letras).'); $('reg-nombre').focus(); return; }
+  if(!validarCelularPin(celular, pin)) return;
+
+  const ok = await asegurarSesion();
+  if(!ok) return;
+
+  const btn = $('btn-registro');
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  try{
+    const r = await sb.rpc('crear_perfil', {
+      p_nombre: nombre,
+      p_celular: celular,
+      p_pin: pin,
+      p_negocio: negocio || null,
+      p_pueblo_id: pid,
+      p_rol: rolRegistro
+    });
+    if(r.error){ toast('No se pudo registrar: '+r.error.message); return; }
+    const fila = (Array.isArray(r.data) && r.data.length) ? r.data[0] : null;
+    if(!fila){ toast('El servidor no respondió como esperábamos.'); return; }
+    if(!fila.ok){ toast(fila.mensaje || 'No se pudo registrar.'); return; }
+    await usarFilaPerfil(fila, fila.mensaje);
+  }catch(e){
+    toast('Error: '+(e && e.message ? e.message : 'desconocido'));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Crear mi perfil';
+  }
+}
+
+async function entrarPerfil(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+
+  const celular = $('ent-celular').value.replace(/\D/g,'');
+  const pin = $('ent-pin').value.replace(/\D/g,'');
+  if(!validarCelularPin(celular, pin)) return;
+
+  const ok = await asegurarSesion();
+  if(!ok) return;
+
+  const btn = $('btn-entrar');
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+  try{
+    const r = await sb.rpc('reclamar_perfil', { p_celular: celular, p_pin: pin });
+    if(r.error){ toast('No se pudo entrar: '+r.error.message); return; }
+    const fila = (Array.isArray(r.data) && r.data.length) ? r.data[0] : null;
+    if(!fila){ toast('El servidor no respondió como esperábamos.'); return; }
+    if(!fila.ok){ toast(fila.mensaje || 'Celular o PIN incorrecto.'); return; }
+    await usarFilaPerfil(fila, fila.mensaje);
+  }catch(e){
+    toast('Error: '+(e && e.message ? e.message : 'desconocido'));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+}
+
+async function revisarEstadoPerfil(){
+  if(!perfil){ toast('No tienes perfil todavía.'); return; }
+  const r = await sb.from('perfiles').select('*').eq('id', perfil.id).maybeSingle();
+  if(r.error){ toast('Error: '+r.error.message); return; }
+  if(!r.data){ toast('No encontré tu perfil. Entra de nuevo con tu PIN.'); return; }
+  perfil = r.data;
+  guardarPerfil(perfil);
+  actualizarChip();
+  renderPanelVendedor();
+  renderPerfil();
+  toast(perfil.estado === 'aprobado' ? '✅ Ya estás aprobado.' : '⏳ Estado: '+perfil.estado);
+}
+
+async function publicarVenta(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+
+  if(!perfil || perfil.estado !== 'aprobado'){
+    toast('Tu perfil aún no está aprobado.');
+    return;
+  }
+
+  const titulo = $('ven-titulo').value.trim();
+  const precio = $('ven-precio').value.trim();
+  const categoria = $('ven-cat').value;
+  const desc = $('ven-desc').value.trim();
+
+  if(titulo.length < 4){ toast('El título debe tener al menos 4 letras.'); $('ven-titulo').focus(); return; }
+
+  const ok = await asegurarSesion();
+  if(!ok) return;
+
+  const ses = await sb.auth.getSession();
+  const uid = (ses.data && ses.data.session) ? ses.data.session.user.id : null;
+  if(!uid){ toast('Necesitas sesión para publicar.'); return; }
+
+  const btn = $('btn-venta');
+  btn.disabled = true;
+  btn.textContent = 'Publicando…';
+  try{
+    const r = await sb.from('publicaciones').insert({
+      pueblo_id: pueblo,
+      perfil_id: uid,
+      titulo: titulo,
+      precio: precio || null,
+      categoria: categoria,
+      descripcion: desc || null,
+      emoji: (categoria||'').split(' ')[0] || '🛒',
+      fotos: fotosVenta.map(function(f){ return f.url; }),
+      destacado: false,
+      dest_dias: 0,
+      estado: 'pendiente'
+    });
+    if(r.error){ toast('No se pudo publicar: '+r.error.message); return; }
+    toast('✅ Listo: tu publicación pasa por moderación.');
+    $('form-venta').reset();
+    fotosVenta = [];
+    pintarFotos('venta');
+    if(!$('mis-pubs').hidden) cargarMisPubs();
+  }catch(e){
+    toast('Error: '+(e && e.message ? e.message : 'desconocido'));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Publicar (pasa por moderación)';
+  }
+}
+
+/* ================= fotos ================= */
+function dataURLaBlob(d){
+  const partes = d.split(',');
+  const m = partes[0].match(/data:(.*?);/);
+  const mime = m ? m[1] : 'image/jpeg';
+  const bin = atob(partes[1]);
+  const arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], {type: mime});
+}
+
+function comprimirArchivo(file){
+  return new Promise(function(resolve, reject){
+    const fr = new FileReader();
+    fr.onerror = function(){ reject(new Error('No se pudo leer la imagen')); };
+    fr.onload = function(){
+      const img = new Image();
+      img.onerror = function(){ reject(new Error('Formato de imagen no reconocido')); };
+      img.onload = function(){
+        let w = img.width, h = img.height;
+        const MAX = 1280;
+        if(w > MAX || h > MAX){
+          const r = Math.min(MAX/w, MAX/h);
+          w = Math.round(w*r);
+          h = Math.round(h*r);
+        }
+        if(w < 1) w = 1;
+        if(h < 1) h = 1;
+        const c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0,0,w,h);
+        ctx.drawImage(img, 0, 0, w, h);
+
+        let listo = false;
+        function done(b){
+          if(listo) return;
+          listo = true;
+          if(b && b.size){
+            const tipo = b.type || 'image/webp';
+            let ext = 'webp';
+            if(tipo.indexOf('png') > -1) ext = 'png';
+            else if(tipo.indexOf('jpeg') > -1 || tipo.indexOf('jpg') > -1) ext = 'jpg';
+            else if(tipo.indexOf('webp') === -1) ext = 'jpg';
+            resolve({blob:b, tipo:tipo, ext:ext, kb:Math.max(1, Math.round(b.size/1024))});
+          } else {
+            try{
+              const d = c.toDataURL('image/jpeg', 0.72);
+              const bb = dataURLaBlob(d);
+              resolve({blob:bb, tipo:'image/jpeg', ext:'jpg', kb:Math.max(1, Math.round(bb.size/1024))});
+            }catch(err){
+              reject(new Error('No se pudo comprimir la imagen'));
+            }
+          }
+        }
+        setTimeout(function(){ done(null); }, 8000);   /* red de seguridad */
+        try{ c.toBlob(done, 'image/webp', 0.72); }catch(e){ done(null); }
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+function idsFotos(cual){
+  if(cual === 'aviso'){
+    return {inp:'fotos-aviso', prog:'prog-aviso', fill:'prog-fill-aviso', txt:'prog-txt-aviso', mini:'mini-aviso'};
+  }
+  return {inp:'fotos-venta', prog:'prog-venta', fill:'prog-fill-venta', txt:'prog-txt-venta', mini:'mini-venta'};
+}
+
+async function procesarFotos(cual){
+  const ids = idsFotos(cual);
+  const inp = $(ids.inp);
+  const lista = (cual === 'aviso') ? fotosAviso : fotosVenta;
+  if(!inp || !inp.files || !inp.files.length) return;
+
+  if(lista.length >= 4){ toast('📷 Máximo 4 fotos'); inp.value = ''; return; }
+
+  const prog = $(ids.prog), fill = $(ids.fill), txt = $(ids.txt);
+  prog.hidden = false;
+  let pct = 0;
+  const iv = setInterval(function(){
+    pct = Math.min(pct + 7, 90);
+    fill.style.width = pct+'%';
+    txt.textContent = 'Comprimiendo… '+pct+'%';
+  }, 70);
+
+  for(const file of Array.from(inp.files)){
+    if(lista.length >= 4){ toast('📷 Máximo 4 fotos'); break; }
+    try{
+      const antes = file.size;
+      const r = await comprimirArchivo(file);
+      const idx = lista.length;
+      const ruta = pueblo+'/'+Date.now()+'-'+idx+'.'+r.ext;
+      const sub = await sb.storage.from('fotos').upload(ruta, r.blob, {contentType: r.tipo});
+      if(sub.error) throw new Error(sub.error.message);
+      const pub = sb.storage.from('fotos').getPublicUrl(ruta);
+      const url = (pub && pub.data && pub.data.publicUrl) ? pub.data.publicUrl : '';
+      if(!url) throw new Error('No se obtuvo la dirección de la foto');
+      lista.push({url:url, kb:r.kb});
+      toast('🗜️ '+kbTxt(antes)+' → '+r.kb+' KB ✅');
+    }catch(e){
+      toast('❌ No se pudo subir una foto: '+(e && e.message ? e.message : 'error'));
+    }
+  }
+
+  clearInterval(iv);
+  fill.style.width = '100%';
+  txt.textContent = '✅ Fotos listas';
+  setTimeout(function(){ prog.hidden = true; fill.style.width = '0%'; }, 750);
+  inp.value = '';
+  pintarFotos(cual);
+}
+
+function pintarFotos(cual){
+  const ids = idsFotos(cual);
+  const el = $(ids.mini);
+  const lista = (cual === 'aviso') ? fotosAviso : fotosVenta;
+  el.innerHTML = lista.map(function(f,i){
+    return '<div class="foto-mini">'+
+      '<img src="'+esc(f.url)+'" alt="foto">'+
+      '<button type="button" class="foto-x" onclick="quitarFoto(\''+cual+'\','+i+')">✕</button>'+
+      '<span class="foto-kb">'+f.kb+' KB</span>'+
+    '</div>';
+  }).join('');
+}
+
+function quitarFoto(cual, i){
+  const lista = (cual === 'aviso') ? fotosAviso : fotosVenta;
+  lista.splice(i,1);
+  pintarFotos(cual);
+}
+
+/* ================= perfil ================= */
+function renderPerfil(){
+  const c = $('perfil-datos');
+  if(!c) return;
+
+  let h = '';
+  h += '<div class="perfil-fila"><span class="perfil-k">Comunidad</span><span class="perfil-v">'+esc(nombrePueblo(pueblo))+'</span></div>';
+  h += '<div class="perfil-fila"><span class="perfil-k">Sesión</span><span class="perfil-v">'+
+       (haySesion ? '🟢 Anónima (este dispositivo)' : '⚪ Invitado')+'</span></div>';
+
+  if(perfil){
+    h += '<div class="perfil-fila"><span class="perfil-k">Nombre</span><span class="perfil-v">'+esc(perfil.nombre)+'</span></div>';
+    if(perfil.negocio) h += '<div class="perfil-fila"><span class="perfil-k">Negocio</span><span class="perfil-v">'+esc(perfil.negocio)+'</span></div>';
+    h += '<div class="perfil-fila"><span class="perfil-k">Tipo</span><span class="perfil-v">'+
+         (perfil.rol === 'admin' ? '🛡️ Administrador' : (perfil.rol === 'auspiciador' ? '🏛️ Institución' : '🛒 Vendedor'))+'</span></div>';
+    h += '<div class="perfil-fila"><span class="perfil-k">Estado</span><span class="perfil-v">'+
+         (perfil.estado === 'aprobado' ? '<span class="badge b-verde">✅ Aprobado</span>'
+          : perfil.estado === 'rechazado' ? '<span class="badge b-rojo">❌ Rechazado</span>'
+          : '<span class="badge b-amarillo">⏳ Pendiente</span>')+'</span></div>';
+  } else {
+    h += '<div class="vacio"><div class="vacio-emo">🛍️</div><div class="vacio-txt">Aún no tienes perfil de vendedor.</div></div>';
+  }
+  c.innerHTML = h;
+
+  const b = $('btn-mis-pubs');
+  const esVendedor = !!perfil && perfil.rol !== 'admin';
+  b.hidden = !esVendedor;
+  if(!esVendedor){
+    $('mis-pubs').hidden = true;
+    $('btn-mis-pubs').hidden = true;
+  }
+}
+
+function verMisPubs(){
+  const c = $('mis-pubs');
+  c.hidden = !c.hidden;
+  if(!c.hidden) cargarMisPubs();
+}
+
+async function cargarMisPubs(){
+  const c = $('mis-pubs-lista');
+  c.innerHTML = '<div class="carga">Cargando…</div>';
+  const ses = await sb.auth.getSession();
+  const uid = (ses.data && ses.data.session) ? ses.data.session.user.id : null;
+  if(!uid){ c.innerHTML = vacioSesion(); return; }
+  const r = await sb.from('publicaciones').select('*').eq('perfil_id', uid)
+    .order('creado', {ascending:false}).limit(30);
+  if(r.error){
+    toast('No cargaron tus publicaciones: '+r.error.message);
+    c.innerHTML = vacio('😵','No se pudo cargar.');
+    return;
+  }
+  const arr = r.data || [];
+  if(!arr.length){ c.innerHTML = vacio('📭','Todavía no has publicado.'); return; }
+  c.innerHTML = arr.map(filaMia).join('');
+}
+
+function vacioSesion(){ return vacio('🔒','Inicia sesión para verlas.'); }
+
+function filaMia(p){
+  const badge = p.estado === 'aprobado' ? '<span class="badge b-verde">✅ Aprobada</span>'
+    : p.estado === 'rechazado' ? '<span class="badge b-rojo">❌ Rechazada</span>'
+    : '<span class="badge b-amarillo">⏳ En revisión</span>';
+  return '<div class="item">'+
+    '<div class="item-tit">'+esc(p.titulo)+'</div>'+
+    '<div class="item-meta">'+esc(p.categoria||'')+(p.precio ? ' · '+esc(p.precio) : '')+' · '+esc(tiempoCorto(p.creado)||'')+'</div>'+
+    '<div class="fila-meta">'+badge+'</div>'+
+  '</div>';
+}
+
+/* ================= administración ================= */
+function abrirAdmin(){ mostrarVista('admin'); }
+function volverPerfil(){ mostrarVista('perfil'); }
+
+async function entrarAdmin(){
+  const email = $('admin-email').value.trim();
+  const pass = $('admin-pass').value;
+  if(!email || !pass){ toast('Escribe tu correo y tu contraseña.'); return; }
+
+  const btn = $('btn-admin');
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+  try{
+    const r = await sb.auth.signInWithPassword({email: email, password: pass});
+    if(r.error){ toast('No se pudo entrar: '+r.error.message); return; }
+    haySesion = true;
+
+    const rr = await sb.from('perfiles').select('*').eq('id', r.data.user.id).maybeSingle();
+    if(rr.error){ toast('No pude verificar tu usuario: '+rr.error.message); return; }
+
+    if(!rr.data || rr.data.rol !== 'admin' || rr.data.estado !== 'aprobado'){
+      const m = $('admin-msg');
+      m.hidden = false;
+      m.className = 'nota-roja';
+      m.innerHTML = 'Ese usuario no es administrador. Pídele al administrador que ejecute el bloque <span class="cod">CREAR TU USUARIO ADMIN</span> del schema.sql.';
+      adminOk = false;
+      return;
+    }
+    $('admin-msg').hidden = true;
+    adminOk = true;
+    perfil = rr.data;
+    guardarPerfil(perfil);
+    actualizarChip();
+    renderPerfil();
+    renderPanelVendedor();
+    await cargarAdmin();
+  }catch(e){
+    toast('Error: '+(e && e.message ? e.message : 'desconocido'));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+}
+
+async function cargarAdmin(){
+  if(!adminOk) return;
+  $('admin-login').hidden = true;
+  $('admin-panel').hidden = false;
+  await Promise.all([adAvisos(), adPubs(), adPerfiles(), adPatros()]);
+}
+
+async function adAvisos(){
+  const c = $('ad-avisos');
+  c.innerHTML = '<div class="carga">Cargando…</div>';
+  const r = await sb.from('avisos').select('*').in('estado',['pendiente','revisando'])
+    .order('creado', {ascending:false}).limit(100);
+  if(r.error){
+    toast('Avisos: '+r.error.message);
+    c.innerHTML = vacio('😵','No se pudo cargar.');
+    return;
+  }
+  const arr = r.data || [];
+  $('ad-avisos-num').textContent = String(arr.length);
+  c.innerHTML = arr.length ? arr.map(filaAdminAviso).join('') : vacio('🎉','No hay avisos por verificar.');
+}
+
+function filaAdminAviso(a){
+  const min = Math.max(0, Math.floor((Date.now()-Date.parse(a.creado))/60000));
+  const rojo = min > 20 ? ' rojo' : '';
+  const rev = (a.estado === 'revisando');
+
+  const badges = [];
+  badges.push(`<span class="crono${rojo}">⏱ ${min} min</span>`);
+  if(a.destacado) badges.push('<span class="badge b-dorado">⭐ Destacado</span>');
+  badges.push('<span class="badge b-gris">'+(a.dias||0)+' día(s)</span>');
+
+  return '<div class="item">'+
+    '<div class="item-tit">'+esc(a.ic||'📢')+' '+esc(a.titulo)+'</div>'+
+    '<div class="item-meta">'+esc(a.nombre)+' · '+esc(a.celular)+' · '+esc(a.tipo||'Aviso')+' · '+esc(nombrePueblo(a.pueblo_id))+'</div>'+
+    '<div class="fila-meta">'+badges.join('')+'</div>'+
+    (rev ? '<div class="nota-amarilla">⏳ Este aviso ya está visible para la gente (estado revisando).</div>' : '')+
+    '<div class="acciones">'+
+      '<button type="button" class="btn btn-sm btn-verde" onclick="admAprobar('+a.id+')">✅ Publicar</button>'+
+      '<button type="button" class="btn btn-sm btn-s" onclick="admCorregir('+a.id+')">✏️ Pedir corrección</button>'+
+      '<button type="button" class="btn btn-sm btn-rojo" onclick="admRechazar('+a.id+')">❌ Rechazar</button>'+
+    '</div>'+
+  '</div>';
+}
+
+async function adPubs(){
+  const c = $('ad-pubs');
+  c.innerHTML = '<div class="carga">Cargando…</div>';
+  const r = await sb.from('publicaciones').select('*').eq('estado','pendiente')
+    .order('creado', {ascending:false}).limit(100);
+  if(r.error){
+    toast('Publicaciones: '+r.error.message);
+    c.innerHTML = vacio('😵','No se pudo cargar.');
+    return;
+  }
+  const arr = r.data || [];
+  $('ad-pubs-num').textContent = String(arr.length);
+  c.innerHTML = arr.length ? arr.map(filaAdminPub).join('') : vacio('🎉','No hay publicaciones pendientes.');
+}
+
+function filaAdminPub(p){
+  const conFoto = (p.fotos && p.fotos.length) ? p.fotos[0] : '';
+  const thumb = conFoto ? '<img src="'+esc(conFoto)+'" alt="">' : esc(p.emoji||'🛒');
+  return '<div class="item">'+
+    '<div style="display:flex;gap:11px;align-items:flex-start">'+
+      '<span class="thumb">'+thumb+'</span>'+
+      '<span class="fila-main">'+
+        '<span class="item-tit">'+esc(p.titulo)+'</span>'+
+        '<span class="item-meta">'+esc(p.categoria||'')+(p.precio ? ' · '+esc(p.precio) : '')+' · '+esc(nombrePueblo(p.pueblo_id))+' · '+esc(tiempoCorto(p.creado)||'')+'</span>'+
+      '</span>'+
+    '</div>'+
+    '<div class="acciones">'+
+      '<button type="button" class="btn btn-sm btn-verde" onclick="adPubAprobar('+p.id+')">✅ Aprobar</button>'+
+      '<button type="button" class="btn btn-sm btn-rojo" onclick="adPubRechazar('+p.id+')">❌ Rechazar</button>'+
+    '</div>'+
+  '</div>';
+}
+
+async function adPerfiles(){
+  const c = $('ad-perfiles');
+  c.innerHTML = '<div class="carga">Cargando…</div>';
+  const r = await sb.from('perfiles').select('*').eq('estado','pendiente')
+    .order('creado', {ascending:false}).limit(100);
+  if(r.error){
+    toast('Vendedores: '+r.error.message);
+    c.innerHTML = vacio('😵','No se pudo cargar.');
+    return;
+  }
+  const arr = r.data || [];
+  $('ad-perfiles-num').textContent = String(arr.length);
+  c.innerHTML = arr.length ? arr.map(filaAdminPerfil).join('') : vacio('🎉','No hay vendedores por aprobar.');
+}
+
+function filaAdminPerfil(p){
+  return '<div class="item">'+
+    '<div class="item-tit">'+esc(p.avatar||'👤')+' '+esc(p.nombre)+'</div>'+
+    '<div class="item-meta">'+esc(p.celular||'Sin celular')+' · '+esc(p.negocio||'Sin negocio')+' · '+
+      (p.rol === 'auspiciador' ? '🏛️ Institución' : '🛒 Vendedor')+' · '+esc(nombrePueblo(p.pueblo_id))+'</div>'+
+    '<div class="acciones">'+
+      '<button type="button" class="btn btn-sm btn-verde" onclick="adPerfilAprobar(\''+esc(p.id)+'\')">✅ Aprobar</button>'+
+      '<button type="button" class="btn btn-sm btn-rojo" onclick="adPerfilRechazar(\''+esc(p.id)+'\')">❌ Rechazar</button>'+
+    '</div>'+
+  '</div>';
+}
+
+async function adPatros(){
+  const c = $('ad-patros');
+  c.innerHTML = '<div class="carga">Cargando…</div>';
+  const r = await sb.from('patrocinadores').select('*').order('nivel', {ascending:true}).order('orden', {ascending:true});
+  if(r.error){
+    toast('Patrocinadores: '+r.error.message);
+    c.innerHTML = vacio('😵','No se pudo cargar.');
+    return;
+  }
+  const arr = r.data || [];
+  c.innerHTML = arr.length ? arr.map(filaAdminPatro).join('') : vacio('🏪','Aún no hay patrocinadores.');
+}
+
+function filaAdminPatro(p){
+  const otro = (p.estado === 'AL DÍA') ? 'POR RENOVAR' : 'AL DÍA';
+  const badge = p.estado === 'AL DÍA' ? '<span class="badge b-verde">AL DÍA</span>'
+    : p.estado === 'POR RENOVAR' ? '<span class="badge b-amarillo">POR RENOVAR</span>'
+    : '<span class="badge b-rojo">VENCIDO</span>';
+  return '<div class="item">'+
+    '<div class="item-tit">'+esc(p.ic||'🏪')+' '+esc(p.nombre)+'</div>'+
+    '<div class="item-meta">'+(p.nivel === 'super' ? '⭐ Súper' : '📍 Local')+' · '+esc(nombrePueblo(p.pueblo_id))+
+      (p.categoria ? ' · '+esc(p.categoria) : '')+'</div>'+
+    '<div class="fila-meta">'+badge+'</div>'+
+    '<div class="acciones">'+
+      '<button type="button" class="btn btn-sm btn-s" onclick="adPatToggle('+p.id+',\''+esc(p.estado)+'\')">🔄 Poner en '+otro+'</button>'+
+    '</div>'+
+  '</div>';
+}
+
+async function refrescarTodo(){
+  await cargarAdmin();
+  cargarInicio();
+  cargarAvisos();
+  cargarPatro();
+  renderPerfil();
+  renderPanelVendedor();
+}
+
+async function adActualizar(tabla, id, campos, mensaje){
+  const r = await sb.from(tabla).update(campos).eq('id', id);
+  if(r.error){ toast('No se pudo guardar: '+r.error.message); return; }
+  toast(mensaje);
+  await refrescarTodo();
+}
+
+function admAprobar(id){ adActualizar('avisos', id, {estado:'aprobado'}, '✅ Aviso publicado'); }
+function admCorregir(id){ adActualizar('avisos', id, {estado:'pendiente'}, '✏️ Se pidió corrección'); }
+function admRechazar(id){ adActualizar('avisos', id, {estado:'rechazado'}, '❌ Aviso rechazado'); }
+function adPubAprobar(id){ adActualizar('publicaciones', id, {estado:'aprobado'}, '✅ Publicación aprobada'); }
+function adPubRechazar(id){ adActualizar('publicaciones', id, {estado:'rechazado'}, '❌ Publicación rechazada'); }
+function adPerfilAprobar(id){ adActualizar('perfiles', id, {estado:'aprobado'}, '✅ Vendedor aprobado'); }
+function adPerfilRechazar(id){ adActualizar('perfiles', id, {estado:'rechazado'}, '❌ Vendedor rechazado'); }
+
+async function adPatToggle(id, actual){
+  const nuevo = (actual === 'AL DÍA') ? 'POR RENOVAR' : 'AL DÍA';
+  await adActualizar('patrocinadores', id, {estado: nuevo}, '🔄 Patrocinador en '+nuevo);
+}
+</script>
+</body>
+</html>

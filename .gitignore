@@ -1,0 +1,8 @@
+.DS_Store
+Thumbs.db
+*.log
+
+# El prototipo de demostración es solo local: no se sube al repo público
+mipueblo-prototipo.html
+/assets/
+hola-mundo.html
