@@ -574,6 +574,12 @@ const ICONO_TIPO = {'Emergencia':'🚨','Evento':'🎉','Seguridad':'🛡️','P
 const VENTA_PALABRAS = ['vendo','se vende','precio','por pieza','por unidad','delivery','envio','envío',
                         'articulo','artículo','promocion','promoción','combo','liquidacion','liquidación'];
 
+/* ---------- columnas de perfiles ----------
+   La tabla perfiles NO concede pin_hash al público (a propósito: el hash del PIN
+   jamás sale por la API). Si se pide con '*' PostgreSQL contesta
+   "permission denied for table perfiles", así que siempre con esta lista. */
+const COLS_PERFIL = 'id,pueblo_id,rol,nombre,celular,negocio,avatar,estado,ventas,estrellas,resenas,verificado,creado';
+
 /* ---------- estado ---------- */
 let sb = null;
 let pueblo = 'p1';
@@ -838,7 +844,7 @@ async function restaurarSesion(){
       return;
     }
     haySesion = true;
-    const rr = await sb.from('perfiles').select('*').eq('id', ses.user.id).maybeSingle();
+    const rr = await sb.from('perfiles').select(COLS_PERFIL).eq('id', ses.user.id).maybeSingle();
     if(rr.error){ toast('No pude leer tu perfil: '+rr.error.message); }
     else if(rr.data){ perfil = rr.data; guardarPerfil(perfil); }
     else { borrarPerfilLocal(); }
@@ -1410,7 +1416,7 @@ async function usarFilaPerfil(fila, mensaje){
     id: fila.id, nombre: fila.nombre, negocio: fila.negocio, rol: fila.rol,
     pueblo_id: fila.pueblo_id, estado: fila.estado
   };
-  const rr = await sb.from('perfiles').select('*').eq('id', fila.id).maybeSingle();
+  const rr = await sb.from('perfiles').select(COLS_PERFIL).eq('id', fila.id).maybeSingle();
   if(rr.error) toast('Aviso: no pude leer tu perfil completo: '+rr.error.message);
   else if(rr.data) perfil = rr.data;
   guardarPerfil(perfil);
@@ -1490,7 +1496,7 @@ async function entrarPerfil(ev){
 
 async function revisarEstadoPerfil(){
   if(!perfil){ toast('No tienes perfil todavía.'); return; }
-  const r = await sb.from('perfiles').select('*').eq('id', perfil.id).maybeSingle();
+  const r = await sb.from('perfiles').select(COLS_PERFIL).eq('id', perfil.id).maybeSingle();
   if(r.error){ toast('Error: '+r.error.message); return; }
   if(!r.data){ toast('No encontré tu perfil. Entra de nuevo con tu PIN.'); return; }
   perfil = r.data;
@@ -1777,7 +1783,7 @@ async function entrarAdmin(){
     if(r.error){ toast('No se pudo entrar: '+r.error.message); return; }
     haySesion = true;
 
-    const rr = await sb.from('perfiles').select('*').eq('id', r.data.user.id).maybeSingle();
+    const rr = await sb.from('perfiles').select(COLS_PERFIL).eq('id', r.data.user.id).maybeSingle();
     if(rr.error){ toast('No pude verificar tu usuario: '+rr.error.message); return; }
 
     if(!rr.data || rr.data.rol !== 'admin' || rr.data.estado !== 'aprobado'){
@@ -1885,7 +1891,7 @@ function filaAdminPub(p){
 async function adPerfiles(){
   const c = $('ad-perfiles');
   c.innerHTML = '<div class="carga">Cargando…</div>';
-  const r = await sb.from('perfiles').select('*').eq('estado','pendiente')
+  const r = await sb.from('perfiles').select(COLS_PERFIL).eq('estado','pendiente')
     .order('creado', {ascending:false}).limit(100);
   if(r.error){
     toast('Vendedores: '+r.error.message);
