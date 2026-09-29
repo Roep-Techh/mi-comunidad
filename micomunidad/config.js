@@ -1,12 +1,7 @@
-/* ==========================================================================
-   MiComunidad · config.js  →  PEGA AQUÍ TUS LLAVES (1 minuto)
-   Supabase → Project Settings → API
-     · Project URL  → SUPABASE_URL
-     · anon public  → SUPABASE_ANON_KEY   (esta llave es pública, no es secreta)
-   ========================================================================== */
+
 window.MC = {
-  SUPABASE_URL:    'https://TU-PROYECTO.supabase.co',
-  SUPABASE_ANON_KEY: 'PEGA_AQUI_TU_ANON_KEY',
+  SUPABASE_URL:    'https://twvartunpcvztwxotfoa.supabase.co/rest/v1/',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3dmFydHVucGN2enR3eG90Zm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3MTgwMjEsImV4cCI6MjEwNjI5NDAyMX0.B1KMumaT-HZosOzaSkBbMb62C_XZInIU3v0RJhr6d2I',
   PUEBLO_DEFECTO:  'p1'
 };
 
