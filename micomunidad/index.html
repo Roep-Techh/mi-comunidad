@@ -658,7 +658,7 @@ function kbTxt(bytes){
 function diasRestantes(a){
   const creada = Date.parse(a.creado);
   if(isNaN(creada)) return a.dias || 0;
-  const usados = Math.floor((Date.now()-creida)/86400000);
+  const usados = Math.floor((Date.now()-creada)/86400000);
   const r = (a.dias||0) - usados;
   return r < 0 ? 0 : r;
 }
